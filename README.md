@@ -1,10 +1,10 @@
-# TypeSafe AI JavaScript SDK
+# TypeSafe AI Zig SDK
 
-JavaScript and TypeScript SDK for [TypeSafe AI](https://typesafe.ai).
+Zig SDK for [TypeSafe AI](https://typesafe.ai).
 
 ## Quickstart
 
-Install the SDK (Node.js 20 or newer):
+Install the SDK (Zig 0.16.0):
 
 ```sh
 npm install @typesafe-ai/sdk
