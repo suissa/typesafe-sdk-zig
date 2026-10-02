@@ -1,38 +1,65 @@
 # TypeSafe AI Zig SDK
 
-Zig SDK for [TypeSafe AI](https://typesafe.ai).
+SDK nativo em Zig para a [TypeSafe AI](https://typesafe.ai), sem dependências externas.
+Os nomes públicos do SDK original foram mantidos sempre que há um equivalente em Zig:
+`TypeSafeClient`, `systemOne`, `Models`, `choice`, `noul`, `score`, `RetryPolicy` e os nomes de erro HTTP.
 
-## Quickstart
+## Requisitos
 
-Install the SDK (Zig 0.16.0):
+- Zig 0.14.0 ou mais recente.
+- Uma chave em `TYPESAFE_API_KEY` (ou `apiKey` na configuração).
+
+## Instalação
+
+Adicione este repositório ao `build.zig.zon` e importe o módulo:
+
+```zig
+const typesafe = b.dependency("typesafe_sdk", .{
+    .target = target,
+    .optimize = optimize,
+}).module("typesafe");
+exe.root_module.addImport("typesafe", typesafe);
+```
+
+## Uso
+
+```zig
+const std = @import("std");
+const typesafe = @import("typesafe");
+
+pub fn main() !void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var client = try typesafe.TypeSafeClient.init(allocator, .{});
+    defer client.deinit();
+
+    var questions = typesafe.Questions.init(allocator);
+    defer questions.deinit();
+    try questions.put("billing", typesafe.noul(
+        .{ .string = "Is this about billing?" },
+        null,
+    ));
+
+    var result = try client.systemOne(.{
+        .state = .{ .string = "I was charged twice." },
+        .questions = &questions,
+    }, .{});
+    defer result.deinit();
+
+    std.debug.print("model: {s}\n", .{result.value.model});
+}
+```
+
+`systemOne` e `Models.list` retornam `std.json.Parsed`, que deve receber `deinit`.
+Como Zig 0.14 não possui o modelo async/await do JavaScript, as chamadas de rede são síncronas;
+`APIPromise` permanece disponível como contêiner de compatibilidade para dados e metadados.
+
+## Desenvolvimento
 
 ```sh
-npm install @typesafe-ai/sdk
+zig build test
+zig fmt --check build.zig src
+zig build docs
 ```
-
-Set `TYPESAFE_API_KEY` in your environment, then create and use the client:
-
-```ts
-import { choice, TypeSafeClient } from "@typesafe-ai/sdk";
-
-const client = new TypeSafeClient();
-const response = await client.systemOne({
-  state: { document: "I was charged twice. Please fix this ASAP." },
-  questions: {
-    category: choice("What is this ticket about?", {
-      billing: null,
-      technical: null,
-      other: null,
-    }),
-  },
-});
-
-console.log(response.answers.category.choice);
-```
-
-Answer types are inferred from your questions. The package includes ESM, CommonJS, and TypeScript declarations.
-
-## Documentation
-
-Learn what TypeSafe can do in the [TypeSafe docs](https://docs.typesafe.ai/).
-See the SDK's [client](src/client.ts) and [types](src/types.ts) for API options and defaults.
