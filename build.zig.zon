@@ -1,0 +1,8 @@
+.{
+    .name = "typesafe_sdk",
+    .version = "0.6.0",
+    .fingerprint = 0x61338c2c4c7fea31,
+    .minimum_zig_version = "0.14.0",
+    .dependencies = .{},
+    .paths = .{ "build.zig", "build.zig.zon", "src", "LICENSE", "README.md" },
+}
